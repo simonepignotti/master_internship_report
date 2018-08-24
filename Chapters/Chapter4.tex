@@ -1,20 +1,18 @@
 
-\chapter{Results and Discussion} % Main chapter title
+\chapter{Results and Discussion}
 \label{Chapter4}
 
 \section{Results}
 
-To evaluate the performance of this abundance estimation framework, we used both a simulated readset, in which the reference genome generating each read is known and the exact abundances are ,
+To evaluate the performance of this abundance estimation framework, we used both a simulated readset, in which the reference genome generating each read is known and the exact abundances can be calculated, and a real metagenomic sample generated artificially from even volumes of DNA of different species.
 
 \subsection{Simulated Reads}
 
-The following results were obtained by running  on the read set from \textbf{[ref i100]}, which has been used in several metagenomic performance assessments.
+The following results were obtained by using our method on the read set from \textbf{[ref i100]}, which has been used in several metagenomic performance assessments.
 
 The index used for the assignments includes 1267 genomes from 500 species, including the 193 genomes from 85 species in the read set.
 
-In the rows corresponding to false negative and false positive rate, the integer
-represents the number of genomes (or species, genera etc.) and the float between
-parentheses represents their estimated relative abundance.
+In the rows corresponding to false negative and false positive rate, the integer represents the number of genomes (or species, genera etc.) and the float between parentheses represents their estimated relative abundance.
 
 \begin{center}
 \begin{tabular}{ c|c|c|c| }
@@ -50,16 +48,16 @@ Rank & Measure & $\lambda=1;~\alpha=0.01$ (\textbf{LASSO}) & $\lambda=0.998;~\al
 \end{tabular}
 \end{center}
 
-Since the reference genomes were many less than average use cases, and the sample dataset was not nearly as complex as real experiments, the best variable selection for ranks higher than genome is achieved by using only $l_1$ regularization (first column).
-Nevertheless, introducing a very small coefficient for $l_2$ increases the overall precision and reduces the false negatives at genome level, probably thanks to the ``\textit{grouping effect}'' of Elastic Net. This is expected to be way more beneficial on real instances, where the optimal balance between $l_1$ and $l_2$ is expected to be very different.
+Since the reference genomes were many less than average use cases, and the sample dataset was not nearly as complex as real experiments, the best variable selection for ranks higher than genome is achieved by using only $L_1$ regularization (first column).
+Nevertheless, introducing a very small coefficient for $L_2$ increases the overall precision and reduces the number of false negatives at genome level, probably thanks to the ``\textit{grouping effect}'' of the Elastic Net. This is expected to be way more beneficial on real instances, where the optimal balance between $L_1$ and $L_2$ is expected to change substantially.
 
 \subsection{Human Microbiome Project Mock Community}
 
-In a real metagenomic scenario, where samples are collected directly from the environment and sequenced without prior isolation, it is extremely important to use an extensive database of reference genomes to reduce the number of reads which cannot be classified for lack of a close-enough representative genome. This has recently been explored in \textbf{[ref growrs]}, where the accuracy of the pipeline Kraken+Bracken was assessed for several versions of NCBI RefSeq, one of the most commonly used reference databases. For this reason, we have used the last version of RefSeq as of July 2018 to build the index of ProPhyle. Due to the size of the database, for which the construction of Kraken's index requires about 2.5TB of RAM and 11 days on a 64 cores compute node \textbf{[ref growrs]}, we have selected only the \textit{reference} and \textit{representative} genomes for each species, as defined in their website\footnote{\url{https://support.nlm.nih.gov/knowledgebase/article/KA-03578/en-us}}. This selection is mantained by NCBI to provide the highest diversity and quality of reference genomes. The total size of the reference database amounts to 92GB, and the resulting ProPhyle index requires 55GB of memory.
+In a real metagenomic scenario, where samples are collected directly from the environment and sequenced without prior isolation, it is extremely important to use an extensive database of reference genomes to reduce the number of reads which cannot be classified for lack of a close-enough representative genome. This has recently been explored in \textbf{[ref growrs]}, where the accuracy of the pipeline Kraken+Bracken was assessed for several versions of NCBI RefSeq, one of the most commonly used reference databases. For this reason, we have used the last version of RefSeq as of July 2018 to build the index of ProPhyle. Due to the size of the database, for which the construction of Kraken's index requires about 2.5TB of RAM and 11 days on a 64 cores compute node \textbf{[ref growrs]}, we have selected only the \textit{reference} and \textit{representative} genomes for each species, as defined in their website\footnote{\url{https://support.nlm.nih.gov/knowledgebase/article/KA-03578/en-us}}. This selection is mantained by NCBI to provide the highest diversity and quality of reference genomes. The total size of the reference database amounts to 30GB, and the resulting ProPhyle index requires 55GB of memory.
 
-In addition to this issue, real metagenomic samples pose a great challenge to the performance benchmarks of classifiers, since the actual abundances in the sample are often unknown. To address this issue, we have used one of the few readsets for which a ground truth is provided: the pilot experiment for the Human Microbiome Project (HMP). The Human Microbiome Project is a research initiative to improve understanding of the microbial flora involved in human health and disease, and in this pilot experiment they designed an even mixture of microbial DNA for which at least one reference is available in RefSeq. This provides a semi-realistic scenario for the benchmark of abundance estimation: while the data has been obtained by sequencing DNA with a physical machine, the composition of the sample is far from being realistic, since it only includes 22 organisms and with a uniform distribution.
+In addition to this issue, real metagenomic samples pose a great challenge to the performance benchmarks of classifiers, since the actual abundances in the sample are often unknown. To address this issue, we have used one of the few readsets for which a ground truth is provided: the pilot experiment for the Human Microbiome Project (HMP). The Human Microbiome Project is a research initiative to improve the understanding of the microbial flora involved in human health and disease, and in this pilot experiment they designed an even mixture of microbial DNA for which at least one reference was available in RefSeq at the time of the experiment. This provides a semi-realistic scenario for the benchmark of abundance estimation: while the data has been obtained by sequencing DNA with a physical machine, the composition of the sample is far from being realistic, since it only includes 22 organisms with uniformly distributed abundances.
 
-Since some of the organisms which were used for the experiment have been removed from RefSeq, we only analyzed the performance at ranks species and higher. This poses another challenge to classification, since only a close relative genome is available in the reference database. It is worth noticing that ProPhyle 
+Since some of the organisms which were used for the experiment have been removed from RefSeq, we only analyzed the performance at ranks species and higher. This poses another challenge to classification, since only a close relative genome is available in the reference database.
 
 \begin{center}
 \begin{tabular}{ c|c|c|c| }
@@ -90,8 +88,8 @@ Rank & Measure & ProPhyle (\textbf{TODO}) & Bracken (\textbf{TODO}) \\ \hline
 
 \section{Discussion}
 
-The two experiments in the previous section show that the model is well defined and provides results comparable to the state-of-the art. Furthermore, compared to the work which inspired this work \textbf{[ref gasic]}, the approach suggested is scalable to reference databases containing several thousands of genomes, as shown in \textbf{[ref realexp]}. This is possible thanks to the properties of the metagenomic classifier ProPhyle which produces accurate assignments in a fraction of the time required by traditional read alignment methods as those included in \textbf{[ref gasic]}.
+The two experiments in the previous section show that the model is well defined and provides results comparable to the state-of-the art. Furthermore, compared to the work which inspired this\textbf{[ref gasic]}, the approach suggested is scalable to reference databases containing several thousands of genomes, as shown in \textbf{[ref realexp]}. This is possible thanks to the properties of the metagenomic classifier ProPhyle which produces accurate assignments in a fraction of the time required by traditional read alignment methods as those included in \textbf{[ref gasic]}.
 
 The parametrization of the regularized linear model makes the method extremely flexible. As shown in \textbf{[ref simexp]}, by using a LASSO configuration it is possible to roughly estimate the composition of a sample, with virtually perfect results starting already at the species level; by introducing the $L_2$ penalty in the model and reducing the regularization weight, the method predicts extremely accurate abundances even at the genome level, at the price of introducing some false positives in the results.
 
-The exponential growth of the reference databases still poses a threat to the scalability of the model, since simulating and assigning reads from the whole database may take weeks of computation in the near future. As we show in \textbf{[ref realexp]}, the method can still provide useful insights on the data when only few representatives for each species are included in the database, even when the genomes in the sample are 
+The exponential growth of the reference databases still poses a threat to the scalability of the model, since simulating and assigning reads from the whole database may take weeks of computation in the near future. As we show in \textbf{[ref realexp]}, the method can still provide useful insights on the data when only few representatives for each species are included in the database, even if the genomes in the sample are not included.
