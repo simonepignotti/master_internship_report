@@ -8,11 +8,11 @@ To evaluate the performance of this abundance estimation framework, we used both
 
 \subsection{Simulated Reads}
 
-The following results were obtained by using our method on the read set from \textbf{[ref i100]}, which has been used in several metagenomic performance assessments.
+The following results were obtained by using our method on the read set from \textbf{[ref mende]}, which has been used in several metagenomic performance assessments.
 
-The index used for the assignments includes 1267 genomes from 500 species, including the 193 genomes from 85 species in the read set.
+The index used for the assignments includes 1267 genomes from 500 species, including the 193 genomes from 85 species in the read set. The same database was used to build indexes for Kraken and DiTASiC, which are included in the comparison. Kraken's results have been further processed using the program Bracken, which redistributes reads assigned to internal nodes of the taxonomic tree to a fixed taxonomic rank (e.g. species, genus, etc.). The error estimations and false positive/negative rates are provided for every such rank till family, where the results of our model are virtually perfect. Both a combination of $L_1$ and $L_2$ regularization penalties and a pure LASSO approach have been tested, each providing interesting results of different biological interest.
 
-In the rows corresponding to false negative and false positive rate, the integer represents the number of genomes (or species, genera etc.) and the float between parentheses represents their estimated relative abundance.
+Table \textbf{[ref table]} contains the errors, calculated with the measures introduced in \textbf{[ref meth]}, of the three tools, where the first two columns are respectively the LASSO and Elastic Net versions of our model. In the row corresponding to false positive (resp. negative) rate, the first integer represents the number of variables (e.g. genomes, species, genera etc.), while the float between parentheses represents their estimated (resp. real) relative abundance.
 
 \begin{center}
 \begin{tabular}{ c|c|c|c| }
@@ -49,7 +49,11 @@ Rank & Measure & $\lambda=1;~\alpha=0.01$ (\textbf{LASSO}) & $\lambda=0.998;~\al
 \end{center}
 
 Since the reference genomes were many less than average use cases, and the sample dataset was not nearly as complex as real experiments, the best variable selection for ranks higher than genome is achieved by using only $L_1$ regularization (first column).
-Nevertheless, introducing a very small coefficient for $L_2$ increases the overall precision and reduces the number of false negatives at genome level, probably thanks to the ``\textit{grouping effect}'' of the Elastic Net. This is expected to be way more beneficial on real instances, where the optimal balance between $L_1$ and $L_2$ is expected to change substantially.
+Nevertheless, introducing a very small coefficient for $L_2$ increases the overall precision and reduces the number of false negatives at genome level, probably thanks to the ``\textit{grouping effect}'' of the Elastic Net. This may be way more beneficial on real instances, where the optimal balance between $L_1$ and $L_2$ is expected to change substantially.
+
+Our model outperforms both Bracken and DiTASiC for nearly every error measure used, which makes us confident that the linear model is a good approximation for this problem and that the regularization effects are beneficial. Nevertheless, real metagenomic samples introduce challenges which may break the assumptions needed for the linear model to converge and provide meaningful estimations. While testing these conditions is not straightforward, since results on real samples may only be compared to those of other state-of-the-art tools which are not necessarily more accurate, we use a more realistic, ad-hoc simulation experiment to account for some of these challenges. Furthermore, we test our model on what is, to our knowledge, one of few metagenomic datasets for which the relative abundances of each composant is known. We will see that even in this case it is hard to assess which part of the error is due to the DNA extraction protocol and the read sequencing process.
+
+\subsection{Stress test}
 
 \subsection{Human Microbiome Project Mock Community}
 
