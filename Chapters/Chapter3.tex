@@ -12,20 +12,20 @@ Furthermore, the technological improvements in read sequencing provide increased
 
 Nevertheless, due to the high similarity among the reference genomes of the same species, most reads, especially those associated to the core genome, will still map to multiple references equally well. Therefore reads assigned to subsets of the reference database need to be probabilistically redistributed to each genome.
 
-Several tools including Bracken and Gasic build their model for read redistribution on top of the estimated similarity of the reference genomes. In Bracken \textbf{[ref bra]}, every $k$-mer of each reference is mapped to the index using the Kraken algorithm, and the frequency with which $k$-mers are assigned to internal nodes of the taxonomic tree are used to estimate the probability that a read of the metagenome assigned to such internal nodes originates from each reference in its subtree using Bayes' theorem. In this model, the $k$-mer length $k$ should match the length of the reads in the sample, but the technology used to sequence the metagenome is not taken into account, reducing the robustness of the method. By fixing $k$, it also makes it unfit for machines producing reads of variable length like ONT. Furthermore, by assigning every $k$-mer of the database it increases the computational burden and the risk of overfitting.
+Several tools including Bracken and GASiC build their model for read redistribution on top of the estimated similarity of the reference genomes. In Bracken \textbf{[ref bra]}, every $k$-mer of each reference is mapped to the index using the Kraken algorithm, and the frequency with which $k$-mers are assigned to internal nodes of the taxonomic tree are used to estimate the probability that a read of the metagenome assigned to such internal nodes originates from each reference in its subtree using Bayes' theorem. In this model, the $k$-mer length $k$ should match the length of the reads in the sample, but the technology used to sequence the metagenome is not taken into account, reducing the robustness of the method. By fixing $k$, it also makes it unfit for machines producing reads of variable length like ONT. Furthermore, by assigning every $k$-mer of the database it increases the computational burden and the risk of overfitting.
 Gasic \textbf{[ref gas]} introduced a new approach based on read simulation. Read simulators provide realistic sequences by using probabilistic models built from the results of different sequencing technology. This allows the abundance estimation to be independent from the sequencing technology, which evolves at a fast pace. Reads are simulated from each reference genome with a low coverage and with parameters resembling those of the metagenomic sample, then aligned to the references using a fast aligner like BWA \textbf{[ref bwa]} or Bowtie \textbf{[ref bow]}. Reads mapped to multiple reference genomes are used to build a similarity matrix which is specific to the sequencing technology and the aligner used in the real experiment, and a LASSO linear model is built on top of it \textbf{[ref las]}.
 
-Inspired by these two methods, we developed an abundance estimator for alignment-free tools, which has been integrated in the program ProPhyle. Exploiting ProPhyle's lossless $k$-mer index, producing assignments which are more accurate than Kraken, we decided to focus on the genome level and to make use of the model introduced by Gasic for alignment tools.
+Inspired by these two methods, we developed an abundance estimator for alignment-free tools, which has been integrated in the program ProPhyle. Exploiting ProPhyle's lossless $k$-mer index, producing assignments which are more accurate than Kraken's (see figure \textbf{[ref fig]}), we decided to focus on the genome level and to make use of the model introduced by Gasic for alignment tools.
 
 \subsection{Desired Properties}
 
-A major problem with Bracken and other abundance estimators is the amount of false positives in their output. Indeed, due to the size of modern metagenomic read sets, which may contain up to billions of sequences, it happens frequently that reference genomes which are known not to be present in the sample still have non-zero assignment counts. This happens either because those genomes are highly similar to other references which indeed are present in the sample, or because those reads are generated from a novel strain which is not included in the database and has no better representative, in which case the assignment score will probably have a low score.
+A major problem with Bracken and other abundance estimators is the amount of false positives in their output. Indeed, due to the size of modern metagenomic read sets, which may contain up to billions of sequences, it happens frequently that reference genomes which are known not to be present in the sample still have non-zero assignment counts. This happens either because those genomes are highly similar to other references which indeed are present in the sample, or because those reads are generated from a novel strain which is not included in the database and has no better representative, in which case the assignment will probably have a low score.
 
-While dealing with the second issue requires a preprocessing step to filter out poor quality assignments, the first one can be solved by defining thresholds for the number (or percentage) of specific assignments that a given genome needs to get to be considered as present, where specific means that no other reference genome is matched equally well, as it is done in Bracken. Nevertheless, this solution is once again affected by the uneven representation of species in the database, where well-studied species like human pathogens include hundreds or thousands of representative genomes while others only have few representatives. In the first case, the probability that a read matches an exact genome instead of an entire cluster decreases considerably, since the majority of the k-mers is shared by the whole cluster.
+While dealing with the second issue requires a preprocessing step to filter out poor quality assignments, the first one can be solved by defining thresholds for the number (or percentage) of specific assignments that a given genome needs to get to be considered as present, where specific means that no other reference genome is matched equally well, as it is done in Bracken. Nevertheless, this solution is once again affected by the uneven representation of species in the database, where well-studied species like human pathogens include hundreds or thousands of representative genomes while others only have few representatives. In the first case, the probability that a read matches an exact genome instead of an entire cluster decreases considerably, since most $k$-mers are shared by the whole cluster.
 
-The solution adopted in Gasic, using LASSO to regularize the model and filter out false positives, also has some drawbacks. The major issue appears in the presence of highly similar clusters in the reference database: if the genomes in the cluster all have a comparable amount of assignment, the $L_1$ regularization penalty will be likely to select one of them at random and filter out the others.
+The solution adopted in Gasic, using LASSO to regularize the linear redistribution model and filter out false positives, also has some drawbacks. The major issue appears in the presence of highly similar clusters in the reference database: if the genomes in the cluster all have a comparable amount of assignment, the $L_1$ regularization penalty will be likely to select one of them at random and filter out the others.
 
-To address the issue of Gasic, we used the Elastic Net regressor. Elastic Net combines the $L_1$ regularization used in LASSO and the $L_2$ regularization (also called Tikhonov or Ridge regularization). We will show that the Elastic Net can be seen as a generalization of LASSO, and that it introduces a so-called ``grouping effect'', allowing to avoid the random selection of highly correlated genomes as it happens with LASSO. Furthermore, the predictors selected by its variable selection property are more stable than LASSO's when regularization parameters change. This feature guarantees consistent results when using different parameters to fit metagenomes of different complexity.
+To address the issue of Gasic, we used the Elastic Net regressor. Elastic Net combines the $L_1$ regularization used in LASSO and the $L_2$ regularization (also called Tikhonov or Ridge regularization). We will show that the Elastic Net can be seen as a generalization of LASSO, and that it introduces a so-called ``grouping effect'', avoiding the random selection of highly correlated genomes as it happens with LASSO. Furthermore, the path with which predictors are set to 0 by its variable selection property is more stable than LASSO's when regularization parameters change. This feature guarantees consistent results when using different parameters to fit metagenomes of different complexity.
 
 \subsection{Linear Regression}
 
@@ -42,7 +42,7 @@ The standard method for estimating the regression coefficients is Ordinary Least
 \begin{equation*}
     \boldsymbol{\hat{\beta}} = \argmin_{\beta}{\norm{\vec{y} - \boldsymbol{X}\boldsymbol{\beta}}_2^2}
 \end{equation*}
-Under the assumption that the error vector $\boldsymbol{\varepsilon}$ is normally distributed, OLS is therefore equivalent to the Maximum Likelihood (ML) estimator \textbf{[ref needed]}.
+Under the assumption that the error vector $\boldsymbol{\varepsilon}$ is normally distributed, OLS is therefore equivalent to the Maximum Likelihood (ML) estimator \textbf{[ref wiki]}.
 
 In the context of metagenomic abundances, the observed assignment counts can be modelled as the dependent variables of a linear model, while the regression coefficient could represent the unknown abundances of the reference genomes in the sample, to be estimated using some explanatory matrix. In our case, the explanatory variables will be measures of similarity of the reference genomes. Due to the similarities between genomes of the same species being very high, and to the increasing number of genomes used as references in metagenomic experiments, it is unrealistic to expect this model to fit the data by simply using OLS. In fact, in this case most of the genomes will be considered as present by the model, since the reads in the sample will be mapped to several references, but only few of them will actually be present. To address this issue, we use a model which performs both regularization and variable selection: the Elastic Net.
 
@@ -54,21 +54,33 @@ To avoid overfitting a linear model, or to improve its performance when the prob
 \end{equation*}
 where $\boldsymbol{\Gamma}$, called Tikhonov matrix, is usually chosen as a multiple of the identity matrix. Although introducing this $L_2$ regularization penalty, so called because it uses the $l^2$ norm or Euclidean distance, has a beneficial effect on overfitting issues by shrinking large regression coefficients, an $L_1$ regularization penalty can be used in order to enforce their sparsity, thus performing variable selection. This technique, known as LASSO \textbf{[ref lasso]}, has been already proved to be an effective solution for metagenomics in \textbf{[ref gasic]}.
 
-While the most intuitive way to enforce sparsity is by using the $l^0$ norm, i.e. the number of non-zero coefficients, this would break the convexity of the objective function to optimize, making it an NP-hard problem \textbf{[ref convex]}. Nevertheless, the $l^1$ norm has been shown to approximate $l^0$, therefore providing similar performance without loosing the convexity property. \textbf{MAYBE MORE ON THIS?}\\
+While the most intuitive way to enforce sparsity is by using the $l^0$ norm, i.e. the number of non-zero coefficients, this would break the convexity of the objective function to optimize, making it an NP-hard problem \textbf{[ref convex]}. Nevertheless, the $l^1$ norm has been shown to approximate $l^0$, therefore providing similar performance without loosing the convexity property.
 On the other hand, the $l^2$ norm does not provide the same effect: the intuition of the reason is in the figure \textbf{[L1-L2]}. Let us consider the problem as a constrained optimization problem:
 \begin{equation*}
     \boldsymbol{\hat{\beta}} = \argmin_{\beta}{\norm{\vec{y} - \boldsymbol{X}\boldsymbol{\beta}}_2^2}~~\text{s.t.}~~f(\beta) \leq t
 \end{equation*}
 for $f=\norm{\cdot}_1$ and $f=\norm{\cdot}_2^2$. In the first case, the likelihood of a convex object which lies tangent to the boundary to encounter a ``corner'' is higher than in the second case, where the rotational invariance of the ($n$-)sphere contrasts this property. Figure \textbf{[ref fig]} gives an intuition of this in the 2-dimensional space.
 
-While both $L_1$ and $L_2$ regularization penalties have desirable properties for our application, respectively the sparsity and the shrinking of the regression coefficients, they both come with some drawbacks. The LASSO has been shown to be extremely variable because of its inherent discreteness, as shown in \textbf{[ref Breiman and enet]}. On the other hand, the Tikhonov regression does not provide the desired variable selection property, since using the $l^2$ norm it keeps all the predictors in the model. It has also been shown that in a variety of applications, each technique may perform better than the other.
+\begin{figure}
+  \caption{Optimization space for the $L_1$, $L_2$ and Elastic Net regularizations in 2D.}
+  \centering
+    \includegraphics[width=1\textwidth]{Figures/reg_norms.pdf}
+\end{figure}
+
+\begin{figure}
+  \caption{Example of regularization path for the coefficients of the LASSO and Elastic Net methods on the same instance. Varying the regularization weight $\alpha$ results in smoother transitions for the Elastic Net.}
+  \centering
+    \includegraphics[width=1\textwidth]{Figures/enet_vs_lasso.pdf}
+\end{figure}
+
+While both $L_1$ and $L_2$ regularization penalties have desirable properties for our application, respectively the sparsity and the shrinking of the regression coefficients, they both come with some drawbacks. The LASSO has been shown to be extremely variable because of its inherent discreteness, as shown in \textbf{[ref Breiman and enet]}. On the other hand, the Tikhonov regression does not provide the desired variable selection property, since using the $l^2$ norm it keeps all the predictors in the model. It has also been observed that in a variety of applications, each technique may perform better than the other.
 
 The Elastic Net addresses the issues above by linearly combining the $L_1$ and $L_2$ regularization penalties. The resulting objective function to optimize is:
 \begin{equation*}
     \boldsymbol{\hat{\beta}} = \argmin_{\beta}{\norm{\vec{y} - \boldsymbol{X}\boldsymbol{\beta}}_2^2} + \lambda_1 \norm{\boldsymbol{\beta}}_1 + \lambda_2\norm{\boldsymbol{\beta}}_2^2
 \end{equation*}
 
-The greatest advantage provided by this method is its grouping effect. As shown in Theorem 1 of \textbf{[ref enet]}, this property tends to give similar regression coefficients to highly correlated variables. This is particularly important when fitting metagenomic data of high complexity, where several strains of the same genome may be present in the sample. In such situation, LASSO would only select one such variable at random \textbf{[ref enet]}.
+The greatest advantage provided by this method is its grouping effect. As shown in Theorem 1 of \textbf{[ref enet]}, this property tends to give similar regression coefficients to highly correlated variables. This is particularly important when fitting metagenomic data of high complexity, where several strains of the same species may be present in the sample. In such situation, LASSO would be likely to only select one such variable at random \textbf{[ref enet]}.
 
 \subsection{Solving Linear Models}
 \begin{itemize}
@@ -86,7 +98,7 @@ A technique frequently used for solving linear models, including the sklearn pyt
 
 Inspired by the LASSO linear model defined in \textbf{[ref gasic]} and the improvements in its successor \textbf{[ref ditasic]}, we have designed a model to estimate metagenomic abundances from read assignments, focusing especially on the properties of the assignments of the metagenomic classifier ProPhyle.
 
-Thanks to the lossless property of ProPhyle's index, its read assignments have a higher resolution than other alignment-free methods (cf. \ref{Chapter2}). Even though metagenomic reads can still be assigned to internal nodes of the taxonomic tree, this has a different meaning with respect to the assignments of e.g. Kraken: for ProPhyle, a read is assigned to an internal node if and only if every genome in its subtree has the same assignment score (i.e. shares the same number of $k$-mers with the read); for Kraken, this may happen if two or more, possibly distant genomes have the same score, in which case the tie would be solved by assigning the read to their lowest common ancestor (LCA) instead of providing their list, or if they share every $k$-mer in the read, in which case the $k$-mers themselves would be associated to their LCA in the database, making a precise assignment impossible.
+Thanks to the lossless property of ProPhyle's index, its read assignments have a higher resolution than other alignment-free methods (cf. \ref{Chapter2}). Even though metagenomic reads can still be assigned to internal nodes of the taxonomic tree, this has a different meaning with respect to the assignments of e.g. Kraken: for ProPhyle, a read is assigned to an internal node if and only if every genome in its subtree has the same assignment score (i.e. shares the same number of $k$-mers with the read); for Kraken, this may happen if two or more, possibly distant genomes have the same score, in which case the tie would be solved by assigning the read to their lowest common ancestor (LCA) instead of providing their list, or if they share every $k$-mer in the read, in which case the $k$-mers themselves would be associated to their LCA in the database, making a precise assignment impossible in the first place.
 
 Therefore we designed a model which focuses on the genome level, and which does not take into account the structure of the taxonomic tree but only the actual similarity of the reference genomes, as it is ``perceived'' through ProPhyle's index and assignment algorithm. As introduced in \textbf{[ref gasic]}, a first simulation step is performed in order to estimate such similarities, then read assignments are optimized using an Elastic Net-based linear model.
 
@@ -122,30 +134,28 @@ with non-negativity constraints $r_i \geq 0~\forall i$. The equation correspondi
   m_i = r_i + \sum_{i \neq j}^n s_{ij} \cdot r_j
 \end{equation*}
 
-To estimate the solution to this system, we solve it by making $\vec{r}$ the regression coefficient vector of the Elastic Net.
+To estimate the solution to this system, we solve it using $\vec{r}$ as the regression coefficient vector of the Elastic Net.
 
 \subsection{Implementation}
 
-Simulating reads which reflect the properties of the metagenomic sample to be classified is a crucial step of the optimization pipeline: parameters like read length and error profile of the technology used to sequence the real sample may highly affect the performance of the method. For this reason, we have used the simulation framework RNFsim \textbf{[ref rnf]} in its implementation. RNFsim includes some of the most accurate read simulators and enables reproducible and fully-parametrizable read simulation, and can easily be extended to match the characteristics of evolving sequencing technologies. In order to obtain accurate results, the simulated reads should match the characteristics of the real data as closely as possible.
+Simulating reads which reflect the properties of the metagenomic sample to be classified is a crucial step of the optimization pipeline: parameters like read length and error profile of the technology used to sequence the real sample may highly affect the performance of the method. For this reason, we have used the simulation framework RNFsim \textbf{[ref rnf]} in the implementation of this step. RNFsim includes some of the most efficient and accurate read simulators and enables reproducible and fully-parametrizable read simulation; it can also easily be extended to match the characteristics of evolving sequencing technologies. In order to obtain accurate results, the simulated reads should match the characteristics of the real data as closely as possible.
 
 For the optimization step, we relied on the implementation of the coordinate descent algorithm for Elastic Net provided by the scikit-learn Python framework. The code\footnote{\url{https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/linear_model/cd_fast.pyx}} which performs the optimization is implemented in C as a Cython extension, and provides fast and stable convergence as showed in \ref{Chapter4}.
 
-At the time of writing, all the programs and scripts are publicly available in ProPhyle's Github repository\footnote{\url{https://github.com/prophyle/prophyle}} in the branch \texttt{enet\_abundances}. Every step in the pipeline described above will be integrated in the next release of ProPhyle.
+At the time of writing, all the programs and scripts are publicly available in ProPhyle's Github repository\footnote{\url{https://github.com/prophyle/prophyle}} in the branch \texttt{enet\_abundances}. Every step in the pipeline described above will be integrated in the next main release of ProPhyle.
 
 \subsection{Error estimations}
 
-To benchmark the method we used several error measures, where $e_i$ and $t_i$ are respectively the estimated and true abundances of genome (or species, genus, etc.) $i$:
+To benchmark the method we used the two following error measures, where $e_i$ and $t_i$ are respectively the estimated and true abundances of genome (or species, genus, etc.) $i$:
 \begin{itemize}
-  \item MAE (Mean Absolute Error): calculated over all genomes
+  \item MAE (Mean Absolute Error):
   \begin{equation*}
     \frac{\sum_{i=1}^n |e_i - t_i|}{n}
   \end{equation*}
-  \item RSS (Residual Sum of Squares): calculated over all genomes
+  \item RSS (Residual Sum of Squares):
   \begin{equation*}
     \sum_{i=1}^n (e_i - t_i)^2
   \end{equation*}
-  \item ARE (Average Relative Error): calculated only over the genomes present in the sample
-  \begin{equation*}
-    \frac{\sum_{i=1}^p \frac{|e_i - t_i|}{t_i}}{p}
-  \end{equation*}
 \end{itemize}
+
+In addition to these measures of the distance between the true and estimated abundances, we focused on the false positive and false negative rates, which are arguably the most important measures in many metagenomic experiments: while slight changes in the relative abundances may be interesting for some particular applications, having a reliable list of what the sample is composed of is always a valuable information. Furthermore, we provide two measures for those rates: first, the number of FP (resp. FN), i.e. the amount of genomes which are present in the output of the programs but not in the sample (resp. present in the sample and not in the output), and secondly their relative abundance. We will show that our method achieves superior genome selection performances with respect to the other tools analyzed, while improving the error calculated with the measures above.
