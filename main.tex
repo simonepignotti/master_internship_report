@@ -23,7 +23,7 @@
 %----------------------------------------------------------------------------------------
 
 \documentclass[
-12pt, % The default document font size, options: 10pt, 11pt, 12pt
+11pt, % The default document font size, options: 10pt, 11pt, 12pt
 %oneside, % Two side (alternating margins) for binding by default, uncomment to switch to one side
 english, % ngerman for German
 singlespacing, % Single line spacing, alternatives: onehalfspacing or doublespacing
@@ -191,7 +191,9 @@ headsepline, % Uncomment to get a line under the header
 
 \begin{abstract}
 \addchaptertocentry{\abstractname} % Add the abstract to the table of contents
-Abstract
+The computational analysis of genetic sequences has opened the doors to new fields of science at the crossroad of several different disciplines. In metagenomics, genomic data collected from the environment are analyzed to recover the biological composition of the sample, especially the one associated to mibrobial life forms like bacteria, archaea, viruses and fungi. While they have been unexplored until recently, the microbial organisms populating every natural environment, including oceans, soil and human habitats and bodies, play an essential role in the biological activities which are carried out in these ecosystems. They filter waste water, clean pollution and create medicines. In the human body, those same communities have recently been found to be associated with complex diseases like inflammatory bowel diseases, obesity and colorectal cancer.
+
+In this work we present computational methods allowing the characterization of these communities, and we introduce a new approach based on the analysis of short subsequences shared between the sample and a database of known genomes, followed by the fit of a linear model built upon the sequence similarities in the database. We show that this method allows to reliably retrieve the set of microbial species present in the sample and to closely estimate their relative abundances. Furthermore, this method has been implemented in the open-source metagenomic classifier ProPhyle.
 \end{abstract}
 
 %----------------------------------------------------------------------------------------
@@ -200,8 +202,17 @@ Abstract
 
 \begin{acknowledgements}
 \addchaptertocentry{\acknowledgementname} % Add the acknowledgements to the table of contents
-Gregory, Karel and Michael\\
-Bézout
+All my gratitude goes to three special people without whom this work would not have been possible.
+
+Gregory Kucherov, my supervisor at LIGM, who has been mentoring, supporting and having faith in me for over two years and thanks to whom I have made my most significant research experiences. I cannot express how important it was to meet him and collaborate with him for my growth.
+
+Michael Baym, my supervisor during my visit at the Department of Biomedical Informatics of Harvard Medical School, thanks to whom I had the chance to participate in this vibrant research community and learn from him and his wonderful team. His support and advice have been invaluable.
+
+Karel Břinda, friend and colleague, who has been a model for my research career, a patient teacher and collaborator, and who has genuinely helped me to make progress in this path since the very beginning. I am not the only person believing he is a higher form of human being.\\
+
+I would also like to thank my parents Arianna and Angelo who have always supported every choice of mine, my girlfriend Bérénice for her love and understanding, and all the stimulating people I met during this Master at UPEM and my stay at Harvard Medical School, in particular Siân Owen, Scott Chimileski and Luca Freschi.\\
+
+Finally, I thank the Labex Bézout program for the scholarship which made this experience possible.
 \end{acknowledgements}
 
 %----------------------------------------------------------------------------------------
