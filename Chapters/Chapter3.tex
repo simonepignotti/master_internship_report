@@ -4,15 +4,16 @@
 
 \section{Context}
 
-To cope with the complexity of metagenomes, the size of the reference databases and the resulting uncertainty in read assignments, early abundance estimation tools like Bracken \cite{lu_bracken:_2017} and MEGAN \cite{huson_megan_2007} did not provide the abundances for each reference genomes, but only for taxonomic clusters like species, genus or phylum.
+To cope with the complexity of metagenomes, the size of the reference databases and the resulting uncertainty in read assignments, early abundance estimation tools like Bracken \cite{lu_bracken:_2017} and MEGAN \cite{huson_megan_2007} did not provide the abundances for each reference genome, but only for taxonomic clusters like species, genus or phylum.
 
-This approach introduces a bias due to the structure of the phylogenetic or taxonomic tree, in which some species may be over-represented, others are still subject to adjustments, and in certain cases the definition is not coherent: in the Mycobacterium genus, for instance, Mycobacterium Bovis and Mycobacterium Tuberculosis are classified as two different species even though their genomes are characterized by 99.5\% similarity, while the threshold used for species separation is usually 97\% \cite{garnier_complete_2003}.
+This approach introduces a bias due to the structure of the phylogenetic or taxonomic tree, in which some species may be over-represented, others are still subject to adjustments, and in certain cases the definition is not coherent: in the Mycobacterium genus, for instance, Mycobacterium Bovis and Mycobacterium Tuberculosis are classified as two different species even though their genomes are characterized by 99.5\% similarity, while the threshold used for species separation is normally way lower \cite{garnier_complete_2003}.
 
 Furthermore, the technological improvements in read sequencing provide increased resolution for the metagenomic samples, by generating either short high quality reads with error rate <1\% as with Illumina and Sanger machines, or long reads with higher error rates as with ONT and PacBio. The detail of the information in these sequences allow, with sufficiently high coverage, to map at least some of the reads in the metagenome to the exact reference genome they are likely to come from, when they are present in the database.
 
 Nevertheless, due to the high similarity among the reference genomes of the same species, most reads, especially those associated to the core genome, will still map to multiple references equally well. Therefore reads assigned to subsets of the reference database need to be probabilistically redistributed to each genome.
 
 Several tools including Bracken and GASiC build their model for read redistribution on top of the estimated similarity of the reference genomes. In Bracken, every $k$-mer of each reference is mapped to the index using the Kraken algorithm, and the frequency with which $k$-mers are assigned to internal nodes of the taxonomic tree are used to estimate the probability that a read of the metagenome assigned to such internal nodes originates from each reference in its subtree using Bayes' theorem. In this model, the $k$-mer length $k$ should match the length of the reads in the sample, but the technology used to sequence the metagenome is not taken into account, reducing the robustness of the method. By fixing $k$, it also makes it unfit for machines producing reads of variable length like ONT. Furthermore, by assigning every $k$-mer of the database it increases the computational burden and the risk of overfitting.
+
 Gasic \cite{lindner_metagenomic_2013} introduced a new approach based on read simulation. Read simulators provide realistic sequences by using probabilistic models built from the results of different sequencing technology. This allows the abundance estimation to be independent from the sequencing technology, which evolves at a fast pace. Reads are simulated from each reference genome with a low coverage and with parameters resembling those of the metagenomic sample, then aligned to the references using a fast aligner like BWA \cite{li_aligning_2013} or Bowtie \cite{langmead_fast_2012}. Reads mapped to multiple reference genomes are used to build a similarity matrix which is specific to the sequencing technology and the aligner used in the real experiment, and a LASSO linear model is built on top of it.
 
 Inspired by these two methods, we developed an abundance estimator for alignment-free tools, which has been integrated in the program ProPhyle. Exploiting ProPhyle's lossless $k$-mer index, producing assignments which are more accurate than Kraken's (see figure \ref{fig:mult_ass}), we decided to focus on the genome level and to make use of the model introduced by Gasic for alignment tools.
@@ -33,7 +34,7 @@ Linear regression is a linear approach to modelling the relationship between a s
 \begin{equation*}
     y_i = \beta_0 + \beta_1 x_{i1} + \dots + \beta_p x_{ip} + \varepsilon_i ~,~~ i = 1, \dots , n
 \end{equation*}
-where $y_i$ is the response variable, the vector $\vec{x_i} = \{x_i1, \dots, x_ip \}$ contains the $p$ explanatory variables for $y_i$, the vector $\boldsymbol{\beta} = \{\beta_0, \dots, \beta_p \}$ is the vector of regression coefficients including the intercept term $\beta_0$, and $\varepsilon_i$ is an error term which accounts for noise in the data. In matrix notation, the model can be expressed as:
+where $y_i$ is the response variable, the vector $\vec{x_i} = \{x_{i1}, \dots, x_{ip} \}$ contains the $p$ explanatory variables for $y_i$, the vector $\boldsymbol{\beta} = \{\beta_0, \dots, \beta_p \}$ is the vector of regression coefficients including the intercept term $\beta_0$, and $\varepsilon_i$ is an error term which accounts for noise in the data. In matrix notation, the model can be expressed as:
 \begin{equation*}
     \vec{y} = \boldsymbol{X}\boldsymbol{\beta} + \boldsymbol{\varepsilon}
 \end{equation*}
@@ -62,14 +63,14 @@ On the other hand, the $l^2$ norm does not provide the same effect: the intuitio
 for $f=\norm{\cdot}_1$ and $f=\norm{\cdot}_2^2$. In the first case, the likelihood of a convex object which lies tangent to the boundary to encounter a ``corner'' is higher than in the second case, where the rotational invariance of the ($n$-)sphere contrasts this property.
 
 \begin{figure}
-  \caption{Optimization space for the $L_1$, $L_2$ and Elastic Net regularizations in 2D.}
+  \caption{Optimization space for the $L_1$, $L_2$ and Elastic Net regularizations in 2D. Adapted from \cite{noauthor_lasso_nodate}}
   \centering
     \includegraphics[width=1\textwidth]{Figures/reg_norms.pdf}
   \label{fig:reg_norms}
 \end{figure}
 
 \begin{figure}
-  \caption{Example of regularization path for the coefficients of the LASSO and Elastic Net methods on the same instance. Varying the regularization weight $\alpha$ results in smoother transitions for the Elastic Net.}
+  \caption{Example of regularization path for the coefficients of the LASSO and Elastic Net methods on the same instance. Varying the regularization weight $\alpha$ results in smoother transitions for the Elastic Net. Adapted from \cite{noauthor_lasso_nodate}}
   \centering
     \includegraphics[width=1\textwidth]{Figures/enet_vs_lasso.pdf}
   \label{fig:enet_vs_lasso}
@@ -108,6 +109,7 @@ Therefore we designed a model which focuses on the genome level, and which does 
 
 \subsubsection{Similarity matrix estimation}
 In order to estimate the similarity between each couple of reference genomes, reads are simulated from each of them and assigned to the full reference set. The similarity matrix, whose columns encode the distribution of the assignments, is built as follows:
+\newpage
 \begin{algorithmic}
 \State $\mathbf{S} \gets \mathbb{M}_{n\times n}$
 \For {ref. genome $i \in D$}
