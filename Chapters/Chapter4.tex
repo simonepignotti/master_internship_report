@@ -47,7 +47,7 @@ Rank & Measure & $\lambda=1$ \newline $\alpha=0.01$ \newline (LASSO) & $\lambda=
 \end{center}
 
 \begin{sidewaysfigure}
-  \caption{Abundance profiles at the species level estimated by ProPhyle, Bracken and DiTASiC for the simulated dataset from \textbf{[ref mende]}.}
+  \caption{Abundance profiles at the species level estimated by ProPhyle, Bracken and DiTASiC for the simulated dataset from \cite{mende_assessment_2012}.}
   \centering
     \includegraphics[width=1\textwidth]{Figures/ab_mende.pdf}
   \label{ab_mende}
@@ -61,7 +61,7 @@ Our model outperforms both Bracken and DiTASiC for every error measure and every
 \subsection{Human Microbiome Project Mock Community}
 \label{hmp_exp}
 
-In a real metagenomic scenario, where samples are collected directly from the environment and sequenced without prior isolation, it is extremely important to use an extensive database of reference genomes to reduce the number of reads which cannot be classified for lack of a close-enough representative genome. This has recently been explored in \cite{nasko_refseq_2018}, where the accuracy of the pipeline Kraken+Bracken was assessed for several versions of NCBI RefSeq, one of the most commonly used reference databases. For this reason, we have used the last version of RefSeq as of July 2018 to build the index of ProPhyle. Due to the size of the database, for which the construction of Kraken's index requires about 2.5TB of RAM and 11 days on a 64 cores compute node \cite{nasko_refseq_2018}, we have selected only the \textit{reference} and \textit{representative} genomes for each species, as defined in their website\footnote{\url{https://support.nlm.nih.gov/knowledgebase/article/KA-03578/en-us}}. This selection is mantained by NCBI to provide the highest diversity and quality of reference genomes. The total size of the reference database amounts to 30GB, and the resulting ProPhyle index requires 55GB of memory.
+In a real metagenomic scenario, where samples are collected directly from the environment and sequenced without prior isolation, it is extremely important to use an extensive database of reference genomes to reduce the number of reads which cannot be classified for lack of a close-enough representative genome. This has recently been explored in \cite{nasko_refseq_2018}, where the accuracy of the pipeline Kraken+Bracken was assessed for several versions of NCBI RefSeq, one of the most commonly used reference databases. For this reason, we have used the last version of RefSeq as of July 2018 to build the index of ProPhyle. Due to the size of the database, for which the construction of Kraken's index requires about 2.5TB of RAM and 11 days on a 64 cores compute node \cite{nasko_refseq_2018}, we have selected only the \textit{reference} and \textit{representative} genomes for each species, as defined in their website\footnote{\url{https://support.nlm.nih.gov/knowledgebase/article/KA-03578/en-us}}. This selection is mantained by NCBI to provide the highest diversity and quality of reference genomes. The total size of the reference database amounts to 30GB, and the resulting ProPhyle index requires 55GB of memory. Unfortunately, even with this reduced database it was unfeasible to run Kraken, since its index was estimated to require 330GB of memory.
 
 In addition to this issue, real metagenomic samples pose a great challenge to the performance benchmarks of classifiers, since the actual abundances in the sample are often unknown. To address this issue, we have used one of the few readsets for which a ground truth is provided: the pilot experiment for the Human Microbiome Project (HMP). The Human Microbiome Project is a research initiative to improve the understanding of the microbial flora involved in human health and disease, and in this pilot experiment they designed an even mixture of microbial DNA for which at least one reference was available in RefSeq at the time of the experiment. This provides a semi-realistic scenario for the benchmark of abundance estimation: while the data has been obtained by sequencing DNA with a physical machine, the composition of the sample is far from being realistic, since it only includes 22 organisms with uniformly distributed abundances.
 
@@ -87,6 +87,8 @@ Rank & Measure & Uniform & Adjusted \\ \hline
 \hline
 \end{tabular}
 \end{center}
+
+Comparing the results of ProPhyle to the uniform distribution which we were expecting showed that there was a considerable difference between the estimated and real abundances. Therefore we used NCBI's official analysis results as ground truth, and added the adjusted error estimates in the last column. Those abundances resembled very closely the ones estimated by ProPhyle, and this shows that there may be some algorithmic issue common to several computational methods. This is probably linked to contaminations in the database, since there was one genome in particular which was assigned 40\% of the reads. We expect this kind of issues to happen frequently in real experiment, and there is a real need for a reliable reference database which can limit these discrepancies.
 
 \subsection{Stress test}
 
